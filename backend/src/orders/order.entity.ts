@@ -10,7 +10,11 @@ export interface Order {
   id: string;
   userId: string;
   items: OrderItem[];
+  subtotal: number;
+  shippingCost: number;
   totalPrice: number;
+  shippingAddress: string;
+  paymentMethod: string;
   status: OrderStatus;
   createdAt: Date;
 }

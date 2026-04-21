@@ -3,7 +3,11 @@ import {
   ArrayMinSize,
   IsArray,
   IsInt,
+  IsNotEmpty,
+  IsNumber,
   IsPositive,
+  IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -23,4 +27,16 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @IsString()
+  @IsNotEmpty()
+  shippingAddress: string;
+
+  @IsNumber()
+  @Min(0)
+  shippingCost: number;
+
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: string;
 }

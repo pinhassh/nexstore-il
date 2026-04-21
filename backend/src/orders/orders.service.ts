@@ -28,16 +28,21 @@ export class OrdersService {
       return { productId, quantity, unitPrice: product.price };
     });
 
-    const totalPrice = orderItems.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity,
-      0,
+    const subtotal = round2(
+      orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
     );
+    const shippingCost = round2(dto.shippingCost);
+    const totalPrice = round2(subtotal + shippingCost);
 
     const order: Order = {
       id: uuidv4(),
       userId,
       items: orderItems,
-      totalPrice: Math.round(totalPrice * 100) / 100,
+      subtotal,
+      shippingCost,
+      totalPrice,
+      shippingAddress: dto.shippingAddress,
+      paymentMethod: dto.paymentMethod,
       status: 'pending',
       createdAt: new Date(),
     };
@@ -49,4 +54,8 @@ export class OrdersService {
   findByUser(userId: string): Order[] {
     return this.orders.filter((o) => o.userId === userId);
   }
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
