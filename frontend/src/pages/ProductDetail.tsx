@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,12 +8,127 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Search,
 } from 'lucide-react';
 import { productsApi } from '../lib/api';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../components/Toast';
 import { Navbar } from '../components/Navbar';
+
+// ---------------------------------------------------------------------------
+// Magnifying-glass zoom
+// ---------------------------------------------------------------------------
+// Technique: the image container holds two layers.
+//   1. The base <img> — always visible, not interactive with zoom.
+//   2. An absolutely-positioned overlay <div> whose background-image is the
+//      same src rendered at ZOOM× size.  background-position is recalculated
+//      on every mousemove so the area under the cursor is always centred.
+//
+// Formula (pixel-based, avoids % rounding quirks):
+//   scaledW = containerW × ZOOM
+//   scaledH = containerH × ZOOM
+//   bgPosX  = containerW / 2  −  relX × scaledW   (keep cursor centred)
+//   bgPosY  = containerH / 2  −  relY × scaledH
+//
+// The overlay is clamped to inset-0 with overflow:hidden inherited from the
+// parent, so the zoomed background never bleeds outside the image box.
+// ---------------------------------------------------------------------------
+
+const ZOOM = 2.5;
+
+interface HoverPos {
+  relX: number;   // 0–1 fraction within the container
+  relY: number;
+  w: number;      // container pixel dimensions at the moment of the event
+  h: number;
+}
+
+function ZoomableImage({ src, alt }: { src: string; alt: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<HoverPos | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!loaded || failed || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setHover({
+      relX: (e.clientX - rect.left) / rect.width,
+      relY: (e.clientY - rect.top) / rect.height,
+      w: rect.width,
+      h: rect.height,
+    });
+  }
+
+  const isZooming = hover !== null && loaded && !failed;
+
+  const overlayStyle = isZooming
+    ? {
+        backgroundImage: `url(${src})`,
+        backgroundRepeat: 'no-repeat' as const,
+        backgroundSize: `${hover!.w * ZOOM}px ${hover!.h * ZOOM}px`,
+        backgroundPosition: `${hover!.w / 2 - hover!.relX * hover!.w * ZOOM}px ${
+          hover!.h / 2 - hover!.relY * hover!.h * ZOOM
+        }px`,
+      }
+    : {};
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-full overflow-hidden select-none"
+      style={{ cursor: loaded && !failed ? 'crosshair' : 'default' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHover(null)}
+    >
+      {/* Base image */}
+      <img
+        src={src}
+        alt={alt}
+        draggable={false}
+        className="w-full h-full object-cover"
+        onLoad={() => setLoaded(true)}
+        onError={() => { setFailed(true); setHover(null); }}
+      />
+
+      {/* Zoom overlay — absolutely fills the container, shows magnified area */}
+      {isZooming && (
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={overlayStyle}
+        />
+      )}
+
+      {/* "Hover to zoom" hint — fades away once the user starts hovering */}
+      {loaded && !failed && !hover && (
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/50 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none">
+          <Search className="w-3.5 h-3.5" />
+          Hover to zoom
+        </div>
+      )}
+
+      {/* Subtle crosshair ring that follows the cursor while zooming */}
+      {isZooming && (
+        <div
+          aria-hidden
+          className="absolute pointer-events-none rounded-full border-2 border-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]"
+          style={{
+            width: 64,
+            height: 64,
+            left: hover!.relX * hover!.w - 32,
+            top: hover!.relY * hover!.h - 32,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,7 +183,7 @@ export function ProductDetail() {
   function handleAdd() {
     if (!product || !product.inStock) return;
     addItem(product, quantity);
-    toast(`${quantity}x "${product.name}" added to cart`);
+    toast(`${quantity}× "${product.name}" added to cart`);
   }
 
   return (
@@ -85,16 +200,14 @@ export function ProductDetail() {
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="grid md:grid-cols-2 gap-0">
-            {/* Image */}
-            <div className="h-64 md:h-auto min-h-[300px] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            {/* Image — fixed height so the zoom overlay is contained */}
+            <div className="h-72 md:h-auto md:min-h-[380px] bg-gradient-to-br from-gray-100 to-gray-200">
               {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                <ZoomableImage src={product.imageUrl} alt={product.name} />
               ) : (
-                <Package className="w-24 h-24 text-gray-300" />
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="w-24 h-24 text-gray-300" />
+                </div>
               )}
             </div>
 
