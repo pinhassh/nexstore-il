@@ -5,10 +5,8 @@ import { Navbar } from '../components/Navbar';
 import { productsApi } from '../lib/api';
 import type { Product, ProductQuery } from '../types';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, X, Plus, Minus, Trash2, CreditCard, Loader2 } from 'lucide-react';
-import { ordersApi } from '../lib/api';
+import { ShoppingCart, X, Plus, Minus, Trash2, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/Toast';
 import { useNavigate } from 'react-router-dom';
 
 const DEFAULT_FILTERS: ProductQuery = {};
@@ -20,11 +18,9 @@ export function Dashboard() {
   const [filters, setFilters] = useState<ProductQuery>(DEFAULT_FILTERS);
   const [search, setSearch] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkingOut, setCheckingOut] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { items, removeItem, updateQuantity, clearCart, itemCount, total } = useCart();
+  const { items, removeItem, updateQuantity, itemCount, total } = useCart();
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const fetchProducts = useCallback(async (q: ProductQuery) => {
@@ -50,29 +46,13 @@ export function Dashboard() {
     };
   }, [filters, search, fetchProducts]);
 
-  async function handleCheckout() {
+  function handleCheckout() {
     if (!user) {
-      navigate('/login', { state: { from: '/' } });
+      navigate('/login', { state: { from: '/checkout' } });
       return;
     }
-    setCheckingOut(true);
-    try {
-      await ordersApi.create({
-        items: items.map((i) => ({
-          productId: i.product.id,
-          quantity: i.quantity,
-          unitPrice: i.product.price,
-        })),
-      });
-      clearCart();
-      setCartOpen(false);
-      toast('Order placed successfully!');
-      navigate('/orders');
-    } catch (err) {
-      toast((err as Error).message || 'Checkout failed', 'error');
-    } finally {
-      setCheckingOut(false);
-    }
+    setCartOpen(false);
+    navigate('/checkout');
   }
 
   return (
@@ -168,11 +148,10 @@ export function Dashboard() {
               </div>
               <button
                 onClick={handleCheckout}
-                disabled={checkingOut}
-                className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-all active:scale-[0.98] disabled:opacity-70"
+                className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-all active:scale-[0.98]"
               >
-                {checkingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                {checkingOut ? 'Placing order…' : 'Checkout'}
+                <CreditCard className="w-4 h-4" />
+                Checkout
               </button>
             </div>
           </div>

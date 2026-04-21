@@ -12,6 +12,7 @@ import { OrderHistory } from './pages/OrderHistory';
 import { ProfileSettings } from './pages/ProfileSettings';
 import { AdminAddProduct } from './pages/AdminAddProduct';
 import { AdminUsers } from './pages/AdminUsers';
+import { Checkout } from './pages/Checkout';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
 
               {/* Protected (logged-in users) */}
               <Route element={<ProtectedRoute />}>
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/orders" element={<OrderHistory />} />
                 <Route path="/profile" element={<ProfileSettings />} />
               </Route>

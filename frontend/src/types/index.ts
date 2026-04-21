@@ -24,7 +24,11 @@ export interface Order {
   id: string;
   userId: string;
   items: OrderItem[];
+  subtotal: number;
+  shippingCost: number;
   totalPrice: number;
+  shippingAddress: string;
+  paymentMethod: string;
   status: OrderStatus;
   createdAt: string;
 }
@@ -55,5 +59,8 @@ export interface CartItem {
 }
 
 export interface CreateOrderPayload {
-  items: { productId: number; quantity: number; unitPrice: number }[];
+  items: { productId: number; quantity: number }[];
+  shippingAddress: string;
+  shippingCost: number;
+  paymentMethod: string;
 }
