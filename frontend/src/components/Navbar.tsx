@@ -69,7 +69,7 @@ export function Navbar({ onSearch, searchValue = '' }: NavbarProps) {
             className="flex items-center gap-2 font-bold text-xl text-indigo-600 shrink-0 hover:text-indigo-700 transition-colors"
           >
             <Store className="w-7 h-7" />
-            <span>NexStore</span>
+            <span>NexStoreIL</span>
           </Link>
 
           {/* Search bar */}

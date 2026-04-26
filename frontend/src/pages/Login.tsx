@@ -39,7 +39,7 @@ export function Login() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200">
             <Store className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome to NexStore</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to NexStoreIL</h1>
           <p className="text-gray-500 mt-1 text-sm">Sign in to your account</p>
         </div>
 

@@ -13,9 +13,9 @@ const BCRYPT_ROUNDS = 10;
 const seedUsers: User[] = [
   {
     id: 'admin-seed-001',
-    name: 'Admin User',
-    email: 'admin@nexstore.com',
-    passwordHash: bcrypt.hashSync('Admin1234!', BCRYPT_ROUNDS),
+    name: 'פנחס שינפלד',
+    email: 'p28497@gmail.com',
+    passwordHash: bcrypt.hashSync('123456', BCRYPT_ROUNDS),
     role: 'admin',
   },
   {
